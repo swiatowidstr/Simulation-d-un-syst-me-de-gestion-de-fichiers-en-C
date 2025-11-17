@@ -5,10 +5,10 @@
  * Module de gestion des blocs de données.
  **/
 
-#include <stdio.h>     // fprintf
-#include <stdlib.h>    // malloc, free
-#include <stddef.h>    // NULL
-#include <string.h>    // memcpy, memset
+#include <stdio.h>
+#include <stdlib.h>
+#include <stddef.h>
+#include <string.h>
 
 #include "bloc.h"
 

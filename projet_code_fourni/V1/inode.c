@@ -148,28 +148,33 @@ void AfficherInode(tInode inode) {
 	}
 	
 	//titre
-	printf("------Inode------[%u]\n", inode->numero);
+	printf("------Inode------[%u]\n", Numero(inode));
 	
 	//afficahge du type
 	char *typeStr;
-	if (inode->type == ORDINAIRE) {
+	if (Type(inode) == ORDINAIRE) {
 		typeStr = "ordinaire";
 	}
-	else if (inode->type == REPERTOIRE) {
+	else if (Type(inode) == REPERTOIRE) {
 		typeStr = "repertoire";
 	}
-	else if (inode->type == AUTRE) {
+	else if (Type(inode) == AUTRE) {
 		typeStr = "autre";
 	}
 	printf("type : %s\n", typeStr);
 	
 	//affichage de la taille
-	printf("		taille : %ld octets\n", inode->taille);
+	printf("		taille : %ld octets\n", Taille(inode));
 	
 	//affichage des dates
-	printf("		date dernier accès : %s\n", ctime(&inode->dateDerAcces));
-	printf("		date dernière modification : %s\n", ctime(&inode->dateDerModif));
-	printf("		date dernière modification inode : %s\n", ctime(&inode->dateDerModifInode));
+	time_t t1 = DateDerAcces(inode);
+	time_t t2 = DateDerModif(inode);
+	time_t t3 = DateDerModifFichier(inode);
+
+	printf("                date dernier accès : %s", ctime(&t1));
+	printf("                date dernière modification : %s", ctime(&t2));
+	printf("                date dernière modification inode : %s", ctime(&t3));
+
 	
 	//affichage des données
 	printf("		Données : \n");
@@ -185,8 +190,8 @@ void AfficherInode(tInode inode) {
 			}
 			else {
 			
-				long n = LireDonneesInode1bloc(inode, contenu, inode->taille);
-				if (n > 0) {
+				long n = LireDonneesInode1bloc(inode, contenu, Taille(inode));
+				if (n >= 0) {
 				
 					fwrite(contenu, 1, n, stdout);
 					printf("\n");
