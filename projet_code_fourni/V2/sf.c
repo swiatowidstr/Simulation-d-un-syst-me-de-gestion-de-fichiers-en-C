@@ -57,7 +57,20 @@ struct sSF
 * Sortie : le super-bloc, ou NULL en cas de problème
 */
 static tSuperBloc CreerSuperBloc(char nomDisque[]) {
-  // A COMPLETER
+	tSuperBloc superBloc = malloc(sizeof(struct sSuperBloc));
+	if (superBloc == NULL) {
+		 fprintf(stderr, "CreerSuperBloc : probleme creation\n");
+		 return NULL;
+	}
+	
+	int i = 0
+	for (i; i < TAILLE_NOM_DISQUE && nomDisque[i] != '\0' ; i++) {
+		superBloc->nomDisque[i] = nomDisque[i];
+	}
+	
+	superBloc->nomDisque[i] = '\0';
+	superBloc->dateDerModif = time(NULL);
+	return superBloc;
 }
 
 /* V2
@@ -67,7 +80,10 @@ static tSuperBloc CreerSuperBloc(char nomDisque[]) {
 * Sortie : aucune
 */
 static void DetruireSuperBloc(tSuperBloc *pSuperBloc) {
-  // A COMPLETER
+  if (pSuperBloc != NULL && *pSuperBloc != NULL) {
+  	free(*pSuperBloc);
+  	*pSuperBloc = NULL;
+  }
 }
 
 /* V2
@@ -77,7 +93,12 @@ static void DetruireSuperBloc(tSuperBloc *pSuperBloc) {
 * Sortie : aucune
 */
 static void AfficherSuperBloc(tSuperBloc superBloc) {
-  // A COMPLETER
+	if (superBloc == NULL) {
+		printf("vide\n");
+		return;
+	}
+	time_t dateDerModif = superBloc->dateDerModif;
+	printf("taille bloc = %d, date der modif = %s", TAILLE_BLOC, ctime(&dateDerModif));
 }
 
 /* V2
@@ -86,7 +107,23 @@ static void AfficherSuperBloc(tSuperBloc superBloc) {
  * Retour : le système de fichiers créé, ou NULL en cas d'erreur
  */
 tSF CreerSF (char nomDisque[]){
-  // A COMPLETER
+  tSF sf = malloc (sizeof(struct sSF));
+  if (sf == NULL) {
+  	fprintf(stderr, "CreerSF : probleme creation\n");
+  	return NULL;
+  }
+  
+  sf->superBloc = CreerSuperBloc(nomDisque);
+  if (sf->superBloc == NULL) {
+  	free(sf);
+  	
+  	return NULL;
+  }
+  sf->listeInodes.premier = NULL;
+  sf->listeInodes.dernier = NULL;
+  sf->listeInodes.nbInodes = 0;
+  
+  return sf;
 }
 
 /* V2
@@ -95,7 +132,10 @@ tSF CreerSF (char nomDisque[]){
  * Sortie : aucune
  */
 void DetruireSF(tSF *pSF) {
-  // A COMPLETER
+  if (pSF != NULL && *pSF != NULL) {
+  	free(*pSF);
+  	*pSF = NULL;
+  }
 }
 
 /* V2
@@ -105,7 +145,21 @@ void DetruireSF(tSF *pSF) {
  * Sortie : aucune
  */
 void AfficherSF (tSF sf){
-  // A COMPLETER
+	if (sf == NULL) {
+		printf("vide\n");
+		return;
+	}
+	//affichage du nom du disque et du superbloc
+  printf("SF de nom %s, super bloc:\n", sf->superBloc->nomDisque);
+  AfficherSuperBloc(sf->superBloc);
+  
+  //affichage des inodes graces aux listes chainées 
+  struct sLIsteInodesElement *courant = sf->listeInodes.premier;
+  while (courant != NULL) {
+  	AfficherInode(courant->inode);
+  	courant = courant->suivant;
+  }
+  
 }
 
 /* V2
@@ -114,5 +168,27 @@ void AfficherSF (tSF sf){
  * Sortie : le nombre d'octets effectivement écrits, -1 en cas d'erreur.
  */
 long Ecrire1BlocFichierSF(tSF sf, char nomFichier[], natureFichier type) {
-  // A COMPLETER
+  if (sf == NULL || nomFichier == NULL) {
+  	return -1;
+  }
+  tInode inode = CreerInode(sf->listeInodes.nbInodes, type);
+  
+  struct sListeInodesElement *nouvElement = malloc(sizeof(struct sListeInodesElement));
+  nouvElement->inode = inode;
+  nouvElement->suivant = NULL;
+  
+  
+  sf->listeInodes.dernier->suivant = nouvElement;
+  sf->listeInodes.dernier = nouvElement;
+  sf->listeInodes.nbInodes++;
+  
+  long nbOctetsEcrits = EcrireDonneesInode1bloc(inode, sf->sListeInodesElement->inode, Taille(inode));
+  
+  return nbOctetsEcrits;
 }
+
+
+
+
+
+
