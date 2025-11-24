@@ -7,6 +7,9 @@
 
 #include "sf.h"
 #include "bloc.h"
+#include <stdio.h>
+#include <stdlib.h>
+
 
 // Taille maximale du nom du SF (ou nom du disque)
 #define TAILLE_NOM_DISQUE 24
@@ -63,9 +66,10 @@ static tSuperBloc CreerSuperBloc(char nomDisque[]) {
 		 return NULL;
 	}
 	
-	int i = 0
-	for (i; i < TAILLE_NOM_DISQUE && nomDisque[i] != '\0' ; i++) {
+	int i = 0;
+	while (i < TAILLE_NOM_DISQUE && nomDisque[i] != '\0') {
 		superBloc->nomDisque[i] = nomDisque[i];
+		i++;
 	}
 	
 	superBloc->nomDisque[i] = '\0';
@@ -106,7 +110,7 @@ static void AfficherSuperBloc(tSuperBloc superBloc) {
  * Entrée : nom du disque à associer au système de fichiers créé
  * Retour : le système de fichiers créé, ou NULL en cas d'erreur
  */
-tSF CreerSF (char nomDisque[]){
+tSF CreerSF(char nomDisque[]){
   tSF sf = malloc (sizeof(struct sSF));
   if (sf == NULL) {
   	fprintf(stderr, "CreerSF : probleme creation\n");
@@ -132,10 +136,24 @@ tSF CreerSF (char nomDisque[]){
  * Sortie : aucune
  */
 void DetruireSF(tSF *pSF) {
-  if (pSF != NULL && *pSF != NULL) {
-  	free(*pSF);
-  	*pSF = NULL;
-  }
+	if (pSF != NULL && *pSF != NULL) {
+		if ((*pSF)->superBloc != NULL) {
+			//détruit le super Bloc si il existe
+			DetruireSuperBloc(&(*pSF)->superBloc);
+		}
+		
+		//Détruit les inodes de la liste chainée
+		struct sListeInodesElement *courant = (*pSF)->listeInodes.premier;
+		while (courant != NULL) {
+			struct sListeInodesElement *suivant = courant->suivant;
+			DetruireInode(&courant->inode);
+			free(courant);
+			courant = suivant;
+		}
+		
+		free(*pSF);
+		*pSF = NULL;
+	}
 }
 
 /* V2
@@ -149,17 +167,15 @@ void AfficherSF (tSF sf){
 		printf("vide\n");
 		return;
 	}
-	//affichage du nom du disque et du superbloc
   printf("SF de nom %s, super bloc:\n", sf->superBloc->nomDisque);
   AfficherSuperBloc(sf->superBloc);
   
-  //affichage des inodes graces aux listes chainées 
-  struct sLIsteInodesElement *courant = sf->listeInodes.premier;
+  printf("Affichage des Inodes Du SF\n");
+  struct sListeInodesElement *courant = sf->listeInodes.premier;
   while (courant != NULL) {
   	AfficherInode(courant->inode);
   	courant = courant->suivant;
   }
-  
 }
 
 /* V2
@@ -177,12 +193,27 @@ long Ecrire1BlocFichierSF(tSF sf, char nomFichier[], natureFichier type) {
   nouvElement->inode = inode;
   nouvElement->suivant = NULL;
   
-  
-  sf->listeInodes.dernier->suivant = nouvElement;
-  sf->listeInodes.dernier = nouvElement;
+  //cas dans lequel la liste est vide
+  if (sf->listeInodes.premier == NULL) {
+  	sf->listeInodes.premier = nouvElement;
+  	sf->listeInodes.dernier = nouvElement;
+  }
+  else {
+  	sf->listeInodes.dernier->suivant = nouvElement;
+  	sf->listeInodes.dernier = nouvElement;
+  }
   sf->listeInodes.nbInodes++;
   
-  long nbOctetsEcrits = EcrireDonneesInode1bloc(inode, sf->sListeInodesElement->inode, Taille(inode));
+  FILE *f = fopen(nomFichier, "rb");
+  if (f == NULL) {
+  	return -1;
+  }
+  
+  unsigned char buffer[TAILLE_BLOC];
+  long nbOctetsLus = fread(buffer, 1, TAILLE_BLOC, f);
+  fclose(f);
+  
+  long nbOctetsEcrits = EcrireDonneesInode1bloc(inode, buffer, nbOctetsLus);
   
   return nbOctetsEcrits;
 }
