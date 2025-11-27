@@ -189,20 +189,22 @@ long Ecrire1BlocFichierSF(tSF sf, char nomFichier[], natureFichier type) {
   }
   tInode inode = CreerInode(sf->listeInodes.nbInodes, type);
   
+  //on ajoute l'inode dans la liste chainée d'inodes
   struct sListeInodesElement *nouvElement = malloc(sizeof(struct sListeInodesElement));
   nouvElement->inode = inode;
   nouvElement->suivant = NULL;
   
-  //cas dans lequel la liste est vide
-  if (sf->listeInodes.premier == NULL) {
+  
+  if (sf->listeInodes.premier == NULL) {						//cas dans lequel la liste est vide
   	sf->listeInodes.premier = nouvElement;
   	sf->listeInodes.dernier = nouvElement;
   }
   else {
-  	sf->listeInodes.dernier->suivant = nouvElement;
+  	sf->listeInodes.dernier->suivant = nouvElement;	//cas dans lequel la liste n'est pas vide
   	sf->listeInodes.dernier = nouvElement;
   }
   sf->listeInodes.nbInodes++;
+  
   
   FILE *f = fopen(nomFichier, "rb");
   if (f == NULL) {

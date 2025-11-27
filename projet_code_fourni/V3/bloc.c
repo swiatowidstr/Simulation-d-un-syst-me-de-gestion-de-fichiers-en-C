@@ -5,6 +5,10 @@
  * Module de gestion des blocs de données.
  **/
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <stddef.h>
+#include <string.h>
 #include "bloc.h"
 
 // Dans le .h : typedef unsigned char *tBloc;
@@ -15,7 +19,14 @@
  * Retour : le bloc créé ou NULL en cas de problème
  */
 tBloc CreerBloc (void) {
-  // A COMPLETER
+  tBloc bloc = malloc(TAILLE_BLOC * sizeof(unsigned char));
+  
+  if (bloc == NULL) {
+  	fprintf(stderr, "CreerBloc : probleme creation\n");
+  	return NULL;
+  }
+  
+  return bloc;
 }
 
 /* V1
@@ -24,7 +35,13 @@ tBloc CreerBloc (void) {
  * Retour : aucun
  */
 void DetruireBloc(tBloc *pBloc){
-  // A COMPLETER
+
+  if (pBloc == NULL || *pBloc == NULL) {
+  	return;
+  }
+  
+  free(*pBloc);
+  *pBloc = NULL;
 }
 
 /* V1
@@ -33,8 +50,20 @@ void DetruireBloc(tBloc *pBloc){
  * Entrées : le bloc, l'adresse du contenu à copier et sa taille en octets
  * Retour : le nombre d'octets effectivement écrits dans le bloc
  */
-long EcrireContenuBloc (tBloc bloc, unsigned char *contenu, long taille){
-  // A COMPLETER
+long EcrireContenuBloc(tBloc bloc, unsigned char *contenu, long taille){
+
+  if (bloc == NULL || contenu == NULL || taille <= 0) {
+  	return 0;
+  }
+  
+  long octetsEcrits = 0;
+  
+  for (long i = 0; i < taille && i < TAILLE_BLOC; i++) {
+  	bloc[i] = contenu[i];
+  	octetsEcrits++;
+  }
+  
+  return octetsEcrits;
 }
 
 /* V1
@@ -44,7 +73,20 @@ long EcrireContenuBloc (tBloc bloc, unsigned char *contenu, long taille){
  * Retour : le nombre d'octets effectivement lus dans le bloc
  */
 long LireContenuBloc(tBloc bloc, unsigned char *contenu, long taille){
-  // A COMPLETER
+
+	//on peut faire pareil que dans la fonction EcrireContenuBloc en changeant bloc en contenu
+  if (bloc == NULL || contenu == NULL || taille <= 0) {
+  	return 0;
+  }
+  
+  long octetsLus = 0;
+  
+  for (long i = 0; i < taille && i < TAILLE_BLOC; i++) {
+  	contenu[i] = bloc[i];
+  	octetsLus++;
+  }
+  
+  return octetsLus;
 }
 
 /* V3
@@ -53,7 +95,20 @@ long LireContenuBloc(tBloc bloc, unsigned char *contenu, long taille){
  * Retour : 0 en cas de succès, -1 en cas d'erreur
  */
 int SauvegarderBloc(tBloc bloc, long taille, FILE *fichier){
-  // A COMPLETER
+  if (fichier == NULL) {
+  	return -1
+  }
+  
+  if (taille > TAILLE_BLOC) {
+  	taille = TAILLE_BLOC;
+  }
+  
+  size_t octetsEcrits = fwrite(bloc.contenu, 1, taille, fichier);
+  if (ecrits != (size_t)taille) {
+  	return -1;
+  }
+  
+  return 0;
 }
 
 /* V3
@@ -62,5 +117,11 @@ int SauvegarderBloc(tBloc bloc, long taille, FILE *fichier){
  * Retour : 0 en cas de succès, -1 en cas d'erreur
  */
 int ChargerBloc(tBloc bloc, long taille, FILE *fichier){
-  // A COMPLETER
+	size_t fread(
 }
+
+
+
+
+
+

@@ -53,10 +53,11 @@ tInode CreerInode(int numInode, natureFichier type) {
   for (int i = 0; i < NB_BLOCS_DIRECTS; i++) {
 		inode->blocDonnees[i] = NULL;
 	}
-	time_t now = time(NULL);
-	inode->dateDerAcces = now;
-	inode->dateDerModif = now;
-	inode-> dateDerModifInode = now;
+	//on met le temps actuel pour les dates de dernière modification etc
+	time_t tempsActuel = time(NULL);
+	inode->dateDerAcces = tempsActuel;
+	inode->dateDerModif = tempsActuel;
+	inode-> dateDerModifInode = tempsActuel;
   
   return inode;
 }
@@ -163,9 +164,13 @@ void AfficherInode(tInode inode) {
 		typeStr = "autre";
 	}
 	printf("type : %s\n", typeStr);
-	
+		
 	//affichage de la taille
-	printf("		taille : %ld octets\n", Taille(inode));
+	long taille = Taille(inode);
+	if (taille > 64) {
+		taille = TAILLE_BLOC;
+	}
+	printf("		taille : %ld octets\n", taille);
 	
 	//affichage des dates
 	time_t t1 = DateDerAcces(inode);

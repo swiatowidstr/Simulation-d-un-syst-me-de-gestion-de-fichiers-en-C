@@ -5,16 +5,16 @@
 
 int main() {
 	
-	// Nom du disque
+	//nom du disque
 	char nomDisque[] = "sda";
-	// Création du système de fichiers
+	//création du système de fichiers
 	tSF nouvSF = CreerSF(nomDisque);
+	printf("SF crée avec succès\n");
 	
-	// Ajout de 5 fichiers
 	char fichier1[] = "fichier1.txt";
 	long ecrit1 = Ecrire1BlocFichierSF(nouvSF, fichier1, ORDINAIRE);
 	
-	char fichier2[] = "fichier2.txt";
+	char fichier2[] = "fichier2";
 	long ecrit2 = Ecrire1BlocFichierSF(nouvSF, fichier2, ORDINAIRE);
 	
 	char fichier3[] = "fichier3.txt";
@@ -25,12 +25,10 @@ int main() {
 	
 	char fichier5[] = "fichier5.txt";
 	long ecrit5 = Ecrire1BlocFichierSF(nouvSF, fichier5, ORDINAIRE);
-
-	AfficherSF(nouvSF);
 	
-	// Destruction du SF
+	printf("affichage du SF\n");
+	AfficherSF(nouvSF);
 	DetruireSF(&nouvSF);
 	
 	return 0;
 }
-

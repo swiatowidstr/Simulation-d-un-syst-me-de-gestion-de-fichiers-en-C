@@ -11,7 +11,8 @@ int main(void) {
         
 	char *texte2 =
         "Ceci est le contenu du deuxième inode. loulauloaualaua\n"
-        "lalaalalla bonjour bonjour aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaallllllll";
+        "lalaalalla bonjour bonjour aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaallllllll"
+        "corinevoenronervon";
         
 	char *texte3 = "";
 	
