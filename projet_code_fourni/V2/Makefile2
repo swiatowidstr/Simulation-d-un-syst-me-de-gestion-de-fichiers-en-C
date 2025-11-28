@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall -Wpedantic -std=c11 -Wextra -g
+CFLAGS=-Wall -Wpedantic -std=c11 -Wextra -g -fsanitize=address
 RM=rm -f
 DEPS= bloc.h inode.h sf.h
 OBJ= bloc.o inode.o sf.o gerer_sf_v2.o

@@ -219,7 +219,7 @@ long LireDonneesInode1bloc(tInode inode, unsigned char *contenu, long taille) {
 	if (contenu == NULL || inode == NULL || inode->blocDonnees[0] == NULL) {
 		return -1;
 	}
-	
+	//on vérifie que la taille ne dépasse pas celle d'un bloc
 	long nbOctetsEcrits;
 	if (taille > TAILLE_BLOC) {
 		nbOctetsEcrits = TAILLE_BLOC;
@@ -253,7 +253,7 @@ long EcrireDonneesInode1bloc(tInode inode, unsigned char *contenu, long taille) 
 			return -1;
 		}
 	}
-	
+	//on vérifie que la taille ne dépasse pas celle d'un bloc
 	long nbOctetsEcrits;
 	if (taille > TAILLE_BLOC) {
 		nbOctetsEcrits = TAILLE_BLOC;

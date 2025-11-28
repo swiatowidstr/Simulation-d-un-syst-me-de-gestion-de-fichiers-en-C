@@ -96,15 +96,16 @@ long LireContenuBloc(tBloc bloc, unsigned char *contenu, long taille){
  */
 int SauvegarderBloc(tBloc bloc, long taille, FILE *fichier){
   if (fichier == NULL) {
-  	return -1
+  	return -1;
   }
-  
+  //pour ne pas écrire plus qu'un bloc en taille
   if (taille > TAILLE_BLOC) {
   	taille = TAILLE_BLOC;
   }
   
-  size_t octetsEcrits = fwrite(bloc.contenu, 1, taille, fichier);
-  if (ecrits != (size_t)taille) {
+  //on écrit les données du bloc
+  size_t octetsEcrits = fwrite(bloc.contenu, taille, 1, fichier);
+  if (octetsEcrits != (size_t)taille) {
   	return -1;
   }
   
@@ -117,7 +118,20 @@ int SauvegarderBloc(tBloc bloc, long taille, FILE *fichier){
  * Retour : 0 en cas de succès, -1 en cas d'erreur
  */
 int ChargerBloc(tBloc bloc, long taille, FILE *fichier){
-	size_t fread(
+	if(fichier == NULL) {
+		return -1	;
+	}
+	
+	//pour ne pas lire plus qu'un bloc
+	if(taille > TAILLE_BLOC) {
+		taille = TAILLE_BLOC;
+	}
+	//on lit les données du fichier pour les mettre dans un bloc
+	size_t octetsLus = fread(bloc.contenu, taille, 1, fichier);
+	if( octetsLus != (size_t)taille) {
+		return -1;
+	}
+	return 0;
 }
 
 
