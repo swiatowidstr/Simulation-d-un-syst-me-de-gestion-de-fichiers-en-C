@@ -270,12 +270,12 @@ long LireDonneesInode(tInode inode, unsigned char *contenu, long taille, long de
   	return -1;
   }
   //on regarde si le décalage est au dela de la taille de l'inode
-  if (decalage >= TAILLE_BLOC * NB_BLOCS_DIRECTS) {
+  if (decalage >= inode->taille) {
   	return 0;
   }
   //on diminue la taille a lire si elle dépasse la taille de l'inode 
-  if (decalage + taille >= TAILLE_BLOC * NB_BLOCS_DIRECTS) {
-  	taille = TAILLE_BLOC * NB_BLOCS_DIRECTS - decalage;
+  if (decalage + taille > inode->taille) {
+  	taille = inode->taille - decalage;
   }
   
   long nbOctetsLus = 0;
@@ -289,7 +289,7 @@ long LireDonneesInode(tInode inode, unsigned char *contenu, long taille, long de
 		}
 	
 		//on lit le bloc depuis le décalage
-		long lus = LireContenuBloc(inode->blocDonnees[numBloc], contenu, octetsALire);
+		long lus = LireContenuBloc(inode->blocDonnees[numBloc] + decalageDansBloc, contenu, octetsALire);
 		nbOctetsLus += lus;
 		
 		//on avance le pointeur du contenu 
@@ -303,7 +303,6 @@ long LireDonneesInode(tInode inode, unsigned char *contenu, long taille, long de
 	//on met a jour les informations concernant la date d'acces a l'inode
 	inode->dateDerAcces = time(NULL);
 	return nbOctetsLus;
-	//TODO énnoncé sur les tailles des données lues après les fonctions a écrire
 }
 
 /* V3
@@ -317,11 +316,11 @@ long EcrireDonneesInode(tInode inode, unsigned char *contenu, long taille, long 
   	return -1;
   }
   //on regarde si le décalage est au dela de la taille de l'inode
-  if (decalage >= TAILLE_BLOC * NB_BLOCS_DIRECTS) {
-  	return 0;
+  if (decalage >= inode->taille) {
+  	decalage = inode->taille;
   }
   //on diminue la taille a écrire si elle dépasse la taille de l'inode 
-  if (decalage + taille >= TAILLE_BLOC * NB_BLOCS_DIRECTS) {
+  if (decalage + taille > TAILLE_BLOC * NB_BLOCS_DIRECTS) {
   	taille = TAILLE_BLOC * NB_BLOCS_DIRECTS - decalage;
   }
   
@@ -336,6 +335,9 @@ long EcrireDonneesInode(tInode inode, unsigned char *contenu, long taille, long 
 		}
 	
 		//on écrit le bloc depuis le décalage
+		if (inode->blocDonnees[numBloc] == NULL) {
+			inode->blocDonnees[numBloc] = CreerBloc();
+		}
 		long ecrits = EcrireContenuBloc(inode->blocDonnees[numBloc] + decalageDansBloc, contenu, octetsAEcrire);
 		nbOctetsEcrits += ecrits;
 		
@@ -347,12 +349,19 @@ long EcrireDonneesInode(tInode inode, unsigned char *contenu, long taille, long 
 		numBloc++;
 		decalageDansBloc = 0;
 	}
+	
+	//on met a jout la taille du fichier a la fin;
+	long tailleFin = decalage + nbOctetsEcrits;
+	if (tailleFin > inode->taille) {
+		inode->taille = tailleFin;
+	}
+	
 	//on met a jour les informations concernant les dates de modification et d'acces de l'inode
 	inode->dateDerAcces = time(NULL);
 	inode->dateDerModif = time(NULL);
 	inode->dateDerModifInode = time(NULL);
+	
 	return nbOctetsEcrits;
-  //TODO énnoncé sur les tailles des données écrites après les fonctions a écrire
 }
 
 /* V3
