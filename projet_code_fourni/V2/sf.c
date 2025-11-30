@@ -60,6 +60,7 @@ struct sSF
 * Sortie : le super-bloc, ou NULL en cas de problème
 */
 static tSuperBloc CreerSuperBloc(char nomDisque[]) {
+	//on alloue la place nécéssaire pour le supeBloc
 	tSuperBloc superBloc = malloc(sizeof(struct sSuperBloc));
 	if (superBloc == NULL) {
 		 fprintf(stderr, "CreerSuperBloc : probleme creation\n");

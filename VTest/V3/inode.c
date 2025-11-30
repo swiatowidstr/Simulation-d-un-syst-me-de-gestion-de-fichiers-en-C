@@ -169,15 +169,13 @@ void AfficherInode(tInode inode) {
 		typeStr = "autre";
 	}
 	printf("type : %s\n", typeStr);
-	
-	
 		
 	//affichage de la taille
 	long taille = Taille(inode);
-	
-	//affichage de la taille en octets 
+	if (taille > TAILLE_BLOC) {
+		taille = TAILLE_BLOC;
+	}
 	printf("		taille : %ld octets\n", taille);
-	
 	
 	//affichage des dates
 	time_t t1 = DateDerAcces(inode);
@@ -190,7 +188,7 @@ void AfficherInode(tInode inode) {
 
 	
 	
-	//affichage des données par bloc comme demandé dans la V3
+	//affichage des données
 	printf("		Données : \n");
 	long octetsRestants = taille;
 	for (int i = 0; i < NB_BLOCS_DIRECTS && octetsRestants > 0; i++) {
@@ -200,10 +198,8 @@ void AfficherInode(tInode inode) {
 			if (contenu == NULL) {
 			
 				perror("AfficherInode : malloc");
-				return;
 			}
 			else {
-			
 				//on initialise octetsALire
 				long octetsALire;
 				if (octetsRestants > TAILLE_BLOC) {
@@ -212,20 +208,17 @@ void AfficherInode(tInode inode) {
 				else {
 					octetsALire = octetsRestants;
 				}
+				long lus = LireDonneesInode1bloc(inode, contenu, octetsALire);
 				
-				long lus = LireDonneesInode(inode, contenu, octetsALire, (long)i * TAILLE_BLOC);
-				
-				if (lus > 0) {
+				if (lus >= 0) {
 					
 					//on écrit avec fwrite vers stdout car printf fonctionne que pour les chaines de caracteres finissant par \0
 					// alors que les blocs peuvent contenir des octets nuls.
-					printf("\nbloc [%d]: ", i+1);
-					fwrite(contenu, 1, (size_t)lus, stdout);
+					fwrite(contenu, 1, lus, stdout);
 					printf("\n");
 					printf("Nombre d'octets lus : %ld\n", lus);
 				}
 				free(contenu);
-				octetsRestants -= lus;
 			}
 		}
 	}

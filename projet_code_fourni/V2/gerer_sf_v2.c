@@ -5,6 +5,7 @@
 
 int main() {
 	
+	printf("TESTS V2\n");
 	//nom du disque
 	char nomDisque[] = "sda";
 	//création du système de fichiers
@@ -29,6 +30,8 @@ int main() {
 	printf("affichage du SF\n");
 	AfficherSF(nouvSF);
 	DetruireSF(&nouvSF);
+	
+
 	
 	return 0;
 }

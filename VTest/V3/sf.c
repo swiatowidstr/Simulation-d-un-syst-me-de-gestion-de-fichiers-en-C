@@ -308,7 +308,6 @@ long EcrireFichierSF(tSF sf, char nomFichier[], natureFichier type) {
  * Sortie : 0 en cas de succèe, -1 en cas d'erreur
  */
 int SauvegarderSF(tSF sf, char nomFichier[]) {
-	//TODO réparer cette fonction de merde qui fonctionne pas bien
 	if (sf == NULL || nomFichier == NULL) {
 		
 		printf("erreur: SauvegarderSF: sf ou nomFichier NULL\n");								/////////////
@@ -362,10 +361,9 @@ int SauvegarderSF(tSF sf, char nomFichier[]) {
  * Sortie : 0 en cas de succèe, -1 en cas d'erreur
  */
 int ChargerSF(tSF *pSF, char nomFichier[]) {
-	//TODO réparer cette fonction de merde qui fonctionne pas bien
-  if (nomFichier == NULL || pSF == NULL) {
+  if (nomFichier == NULL) {
   
-  	printf("erreur: ChargerSF: nomFIchier ou pSF == NULL\n");														/////////////////
+  	printf("erreur: ChargerSF: nomFIchier == NULL\n");														/////////////////
   	return -1;
   }
   
@@ -376,32 +374,14 @@ int ChargerSF(tSF *pSF, char nomFichier[]) {
   	return -1;
   }
   
-  //on alloue le SF avant de pourvoir l'utiliser
+  size_t nbLus;
+  fread(&(*pSF)->listeInodes.nbInodes, sizeof(int), 1, f);  					///
   *pSF = malloc(sizeof(struct sSF));
-  if (*pSF == NULL) {
-  	fclose(f);
-  	
-  	printf("erreur: ChargerSF: *pSF NULL\n");																		///////////////
-  	return -1;
-  }
-  
-  (*pSF)->superBloc = malloc(sizeof(struct sSuperBloc));
-  if ((*pSF)->superBloc == NULL) {
-  	free(*pSF);
-  	*pSF = NULL;
-  	
-  	fclose(f);
-  	
-  	printf("(*pSF)->superBloc NULL\n");
-  	return -1;
-	}
+	(*pSF)->superBloc = malloc(sizeof(struct sSuperBloc));
 
   //on charge les informations du superBloc
-  size_t nbLus = fread(&(*pSF)->superBloc->nomDisque, sizeof((*pSF)->superBloc->nomDisque), 1, f);
+  nbLus = fread(&(*pSF)->superBloc->nomDisque, sizeof((*pSF)->superBloc->nomDisque), 1, f);
   if (nbLus != 1) {
-  	free((*pSF)->superBloc);
-  	free(*pSF);
-  	*pSF = NULL;
   	fclose(f);
   	
   	printf("erreur: ChargerSF: problème lecture nomDIsque\n");											///////
@@ -410,54 +390,27 @@ int ChargerSF(tSF *pSF, char nomFichier[]) {
   
   nbLus = fread(&(*pSF)->superBloc->dateDerModif, sizeof((*pSF)->superBloc->dateDerModif), 1, f);
   if (nbLus != 1) {
-    free((*pSF)->superBloc);
-  	free(*pSF);
-  	*pSF = NULL;
   	fclose(f);
   	
   	printf("erreur: ChargerSF: problème lecture dateDerModif\n");											///////
   	return -1;
   }
   
-  //on lit le nombre d'inodes
-  int nbInodesDansFichier = 0;
-  nbLus = fread(&nbInodesDansFichier, sizeof(int), 1, f);
-  if (nbLus != 1) {
-  //on met inodes a 0 si le fichier ne contient pas le nombre d'inodes
-  	nbInodesDansFichier = 0;
-  }
-  (*pSF)->listeInodes.nbInodes = nbInodesDansFichier;
-  (*pSF)->listeInodes.premier = NULL;
-  (*pSF)->listeInodes.dernier = NULL;
-  
   //on lit la liste chainée d'inodes
   struct sListeInodesElement *dernier = NULL;
   for (int i = 0; i < (*pSF)->listeInodes.nbInodes; i++) {
   	//on crée un inode vide avec 0 en type temporairement 
   	tInode inode = CreerInode(i, 0);
-  	if (inode == NULL) {
-  		DetruireSF(pSF);
+  	if (ChargerInode(&inode, f) != 0) {
   		fclose(f);
   		
   		printf("erreur: ChargerSF: chargerInode\n");																	///////
   		return -1;
   	}
   	
-  	//on vérifie si ChargerInode fonction en renoyant 0, sinon il a pas fonctionné
-  	if (ChargerInode(&inode, f) != 0) {
-  		DetruireInode(&inode);
-  		DetruireSF(pSF);
-  		fclose(f);
-  		
-  		printf("erreur: CahrgerSF: problème CHargerInode\n");													////////////
-  		return -1;
-  	}
-  	
   	//on ajoute a la liste chainée
   	struct sListeInodesElement *element = malloc(sizeof(struct sListeInodesElement));
   	if (element == NULL) {
-  		DetruireInode(&inode);
-  		DetruireSF(pSF);
   		fclose(f);
   		
   		printf("erreur: ChargerSF: element de inode NULL\n");															///////
@@ -474,7 +427,6 @@ int ChargerSF(tSF *pSF, char nomFichier[]) {
   	}
   	dernier = element;
   }
-  (*pSF)->listeInodes.dernier = dernier;
   
   fclose(f);
   

@@ -97,7 +97,7 @@ long LireContenuBloc(tBloc bloc, unsigned char *contenu, long taille){
   	octetsLus++;
   }
   
-  //printf("LireContenuBloc: réussi\n");																					//-------------------
+  printf("LireContenuBloc: réussi\n");																					//-------------------
   return octetsLus;
 }
 
