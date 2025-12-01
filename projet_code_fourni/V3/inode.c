@@ -170,9 +170,6 @@ void AfficherInode(tInode inode) {
 	}
 	printf("type : %s\n", typeStr);
 	
-	
-		
-	//affichage de la taille
 	long taille = Taille(inode);
 	
 	//affichage de la taille en octets 
@@ -190,47 +187,28 @@ void AfficherInode(tInode inode) {
 
 	
 	
-	//affichage des données par bloc comme demandé dans la V3
+	//affichage des données 
 	printf("		Données : \n");
-	long octetsRestants = taille;
-	for (int i = 0; i < NB_BLOCS_DIRECTS && octetsRestants > 0; i++) {
-		if (inode->blocDonnees[i] != NULL) {
-		
-			unsigned char *contenu = malloc(TAILLE_BLOC);
-			if (contenu == NULL) {
-			
-				perror("AfficherInode : malloc");
-				return;
-			}
-			else {
-			
-				//on initialise octetsALire
-				long octetsALire;
-				if (octetsRestants > TAILLE_BLOC) {
-					octetsALire = TAILLE_BLOC;
-				}
-				else {
-					octetsALire = octetsRestants;
-				}
-				
-				long lus = LireDonneesInode(inode, contenu, octetsALire, (long)i * TAILLE_BLOC);
-				
-				if (lus > 0) {
-					
-					//on écrit avec fwrite vers stdout car printf fonctionne que pour les chaines de caracteres finissant par \0
-					// alors que les blocs peuvent contenir des octets nuls.
-					printf("\nbloc [%d]: ", i+1);
-					fwrite(contenu, 1, (size_t)lus, stdout);
-					printf("\n");
-					printf("Nombre d'octets lus : %ld\n", lus);
-				}
-				free(contenu);
-				octetsRestants -= lus;
-			}
-		}
+	
+	unsigned char *contenu = malloc(inode->taille + 1);
+	if (contenu == NULL) {
+		perror("AfficherInode : malloc");
+		return;
 	}
 	
-	printf("AfficherInode: réussi\n");																	//-------------
+	long lus = LireDonneesInode(inode, contenu, taille, 0);
+	if (lus < 0) {
+		perror("erreur: AfficherInode: impossible de lire l'inode\n");					///////////////////////
+		free(contenu);
+		return;
+	}
+	//on met un caractère qui indique la fin de la chaine pour pouvoir lire la chaine  
+	contenu[lus] = '\0';
+	printf("%s", contenu);
+	
+	printf("\nAfficherInode: réussi\n");																	//-------------
+	free(contenu);														
+	printf("\n");
 }
 
 /* V1
@@ -270,11 +248,11 @@ long EcrireDonneesInode1bloc(tInode inode, unsigned char *contenu, long taille) 
 	if (inode->blocDonnees[0] == NULL) {
 		inode->blocDonnees[0] = CreerBloc();
 		if (inode->blocDonnees[0] == NULL) {
-		
 			printf("erreur: EcrireDonneesInode1bloc: blocDonnees == NULL\n");			/////////
 			return -1;
 		}
 	}
+	
 	//on vérifie que la taille ne dépasse pas celle d'un bloc
 	long nbOctetsEcrits;
 	if (taille > TAILLE_BLOC) {
@@ -284,14 +262,18 @@ long EcrireDonneesInode1bloc(tInode inode, unsigned char *contenu, long taille) 
 		nbOctetsEcrits = taille;
 	}
 	
-	EcrireContenuBloc(inode->blocDonnees[0], contenu, nbOctetsEcrits);
+	//on écrit dans le bloc
+	nbOctetsEcrits = EcrireContenuBloc(inode->blocDonnees[0], contenu, nbOctetsEcrits);
+  
+  //on met a jour la taille si on a écrit quelque chose
+  if (nbOctetsEcrits > 0) {
+  	inode->taille = nbOctetsEcrits;
+  }
   
   //On met a jour la date
   inode->dateDerAcces = time(NULL);
   inode->dateDerModif = time(NULL);
   inode->dateDerModifInode = time(NULL);
-  
-  inode->taille = taille;
   
   printf("EcrireDonneesInode1bloc: réussi\n");										//-------------
   return nbOctetsEcrits;
@@ -316,35 +298,44 @@ long LireDonneesInode(tInode inode, unsigned char *contenu, long taille, long de
     }
 
     // Ajuster la taille à lire si elle dépasse la fin de l'inode
-    if (decalage + taille > inode->taille) {
+    if (taille > inode->taille - decalage) {
         taille = inode->taille - decalage;
     }
 
     long nbOctetsLus = 0;
-
-    // Si l'inode tient dans un seul bloc, on utilise LireDonneesInode1bloc
-    if (inode->taille <= TAILLE_BLOC) {
-        nbOctetsLus = LireDonneesInode1bloc(inode, contenu, taille);
-    } else {
-        // Inode multi-blocs : on lit bloc par bloc
-        int numBloc = decalage / TAILLE_BLOC;
-        int decalageDansBloc = decalage % TAILLE_BLOC;
-
-        while (taille > 0 && numBloc < NB_BLOCS_DIRECTS && inode->blocDonnees[numBloc] != NULL) {
-            long octetsALire = TAILLE_BLOC - decalageDansBloc;
-            if (taille < octetsALire) octetsALire = taille;
-
-            // Lire le bloc directement
-            long lus = LireContenuBloc(inode->blocDonnees[numBloc] + decalageDansBloc, contenu, octetsALire);
-            nbOctetsLus += lus;
-
-            contenu += lus;
-            taille -= lus;
-            numBloc++;
-            decalageDansBloc = 0;
-        }
+    long octetsRestants = taille;
+		
+		
+    int numBloc = decalage / TAILLE_BLOC;
+    int decalageDansBloc = decalage % TAILLE_BLOC;
+    
+    while (octetsRestants > 0 && numBloc < NB_BLOCS_DIRECTS) {
+    	//on vérifie que le bloc existe;
+    	if (inode->blocDonnees[numBloc] == NULL) {
+    		break;
+    	}
+    	
+    	//on calcule le nombre d'octets à lire dans le bloc
+    	long octetsALire = TAILLE_BLOC - decalageDansBloc;
+    	if (octetsALire > octetsRestants) {
+    		octetsALire = octetsRestants;
+    	}
+    	
+    	//on lit le blocavec le decalage
+    	unsigned char *positionDansBloc = inode->blocDonnees[numBloc];
+    	
+    	for (long i = 0; i < octetsALire; i++) {
+    		contenu[nbOctetsLus + i] = positionDansBloc[decalageDansBloc + i];
+    	}
+    	
+    	nbOctetsLus += octetsALire;
+    	octetsRestants -= octetsALire;
+    	
+    	numBloc++;
+    	decalageDansBloc = 0;
+    	
     }
-
+    
     // Mise à jour de la date d'accès
     inode->dateDerAcces = time(NULL);
 
@@ -358,18 +349,23 @@ long LireDonneesInode(tInode inode, unsigned char *contenu, long taille, long de
  * de ces données et le décalage à appliquer (voir énoncé)
  * Sortie : le nombre d'octets effectivement écrits, ou -1 en cas d'erreur
  */
+ 
+ 
 long EcrireDonneesInode(tInode inode, unsigned char *contenu, long taille, long decalage) {
   if (contenu == NULL || inode == NULL || taille <= 0) {
+  	printf("erreur: EcrireDonneesInode(contenu ou inode NULL ou taille <= 0\n");			///////
+  	return -1;
+  }
   
-  	printf("erreur: EcrireDonneesInode(contenu ou inode NULL ou taille <= 0\n");	///////
+  if (taille <= 0) {
   	return -1;
   }
   
   long tailleMax = TAILLE_BLOC * NB_BLOCS_DIRECTS;
   
   //on regarde si le décalage est au dela de la taille de l'inode
-  if (decalage >= inode->taille) {
-  	decalage = inode->taille;
+  if (decalage >= tailleMax) {
+  	return 0;
   }
   //on diminue la taille a écrire si elle dépasse la taille de l'inode 
   if (decalage + taille > tailleMax) {
@@ -377,37 +373,46 @@ long EcrireDonneesInode(tInode inode, unsigned char *contenu, long taille, long 
   }
   
   long nbOctetsEcrits = 0;
+  long octetsRestants = taille;
   
-	while (taille > 0) {
-		//le bloc dans lequel on écrit
-		int numBloc = decalage / TAILLE_BLOC;
-		
-		//le décalage dans le bloc dans lequel on écrit
-		int decalageDansBloc = decalage % TAILLE_BLOC;
-		
-		long octetsAEcrire = TAILLE_BLOC - decalageDansBloc;
-		if (taille < octetsAEcrire) {
-			octetsAEcrire = taille;
+  //on calcule le premier bloc a partir du décalage
+	int numBloc = decalage / TAILLE_BLOC;
+  int decalageDansBloc = decalage % TAILLE_BLOC;
+  
+  while (octetsRestants > 0 && numBloc < NB_BLOCS_DIRECTS) {
+  	//on crée le bloc si il existe pas déjà
+  	if (inode->blocDonnees[numBloc] == NULL) {
+  		inode->blocDonnees[numBloc] = CreerBloc();
+  		if (inode->blocDonnees[numBloc] == NULL) {
+  			printf("erreur: EcrireDonneesInode: impossible de créer le bloc\n");								/////////
+  			return -1;
+  		}
+  	}
+  
+		//on calcule le nombre doctets à écrire dans le bloc
+		long nbOctetsAEcrire = TAILLE_BLOC - decalageDansBloc;
+		if (nbOctetsAEcrire > octetsRestants) {
+			nbOctetsAEcrire = octetsRestants;
 		}
-	
-		//on écrit le bloc depuis le décalage
-		if (inode->blocDonnees[numBloc] == NULL) {
-			inode->blocDonnees[numBloc] = CreerBloc();
+		
+		//on écrit dans le bloc avec un décalage
+		unsigned char *positionDansBloc = inode->blocDonnees[numBloc];
+		
+		for (long i = 0; i < nbOctetsAEcrire; i++) {
+			positionDansBloc[decalageDansBloc + i] = contenu[nbOctetsEcrits + i];
 		}
 		
-		long ecrits = EcrireContenuBloc(inode->blocDonnees[numBloc] + decalageDansBloc,
-		 																contenu + nbOctetsEcrits,
-		  															octetsAEcrire);
-		nbOctetsEcrits += ecrits;
+		nbOctetsEcrits += nbOctetsAEcrire;
+		octetsRestants -= nbOctetsAEcrire;
 		
-		//on avance le pointeur du contenu 
-		decalage += ecrits;
-		taille -= ecrits;
+		numBloc++;
+		//on remet le decalage à 0 car on a plus besoin de decaler après avoir fait au début
+		decalageDansBloc = 0;
 	}
 	
 	//on met a jout la taille du fichier a la fin;
-	if (decalage > inode->taille) {
-		inode->taille = decalage;
+	if (decalage + nbOctetsEcrits > inode->taille) {
+		inode->taille = decalage + nbOctetsEcrits;
 	}
 	
 	//on met a jour les informations concernant les dates de modification et d'acces de l'inode
@@ -545,14 +550,6 @@ int ChargerInode(tInode *pInode, FILE *fichier) {
   printf("ChargerInode: réussi\n");																										//------------
   return 0;
 }
-
-
-
-
-
-
-
-
 
 
 

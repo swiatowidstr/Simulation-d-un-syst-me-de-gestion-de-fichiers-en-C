@@ -27,6 +27,10 @@ tBloc CreerBloc(void) {
   	return NULL;
   }
   
+  for (int i = 0; i < TAILLE_BLOC; i++) {
+  	bloc[i] = 0;
+  }
+  
   printf("CreerBloc réussi\n");																									//----------------
   return bloc;
 }
@@ -56,23 +60,29 @@ void DetruireBloc(tBloc *pBloc){
  * Entrées : le bloc, l'adresse du contenu à copier et sa taille en octets
  * Retour : le nombre d'octets effectivement écrits dans le bloc
  */
-long EcrireContenuBloc(tBloc bloc, unsigned char *contenu, long taille){
-
-  if (bloc == NULL || contenu == NULL || taille <= 0) {
-  
-  	printf("erreur: EcrireContenuBloc: bloc ou contenu NULL ou taille <= 0\n");		////////
-  	return 0;
-  }
-  
-  long octetsEcrits = 0;
-  
-  for (long i = 0; i < taille && i < TAILLE_BLOC; i++) {
-  	bloc[i] = contenu[i];
-  	octetsEcrits++;
-  }
-  
-  printf("EcrireContenuBloc: réussi\n");																				//-------------
-  return octetsEcrits;
+long EcrireContenuBloc(tBloc bloc, unsigned char *contenu, long taille) {
+    if (bloc == NULL) {
+        printf("erreur: EcrireContenuBloc: bloc NULL\n");
+        return 0;
+    }
+    if (contenu == NULL) {
+        printf("erreur: EcrireContenuBloc: contenu NULL\n");
+        return 0;
+    }
+    if (taille <= 0) {
+        printf("erreur: EcrireContenuBloc: taille <= 0\n");
+        return 0;
+    }
+    
+    long octetsEcrits = 0;
+    
+    for (long i = 0; i < taille && i < TAILLE_BLOC; i++) {
+        bloc[i] = contenu[i];
+        octetsEcrits++;
+    }
+    
+    printf("EcrireContenuBloc: %ld octets écrits\n", octetsEcrits);
+    return octetsEcrits;
 }
 
 /* V1
@@ -107,11 +117,11 @@ long LireContenuBloc(tBloc bloc, unsigned char *contenu, long taille){
  * Retour : 0 en cas de succès, -1 en cas d'erreur
  */
 int SauvegarderBloc(tBloc bloc, long taille, FILE *fichier){
-  if (fichier == NULL) {
-  
-  	printf("erreur: SauvegarderBloc: fichier NULL\n");													///////////////
+  if (fichier == NULL || bloc == NULL) {
+  	printf("erreur: SauvegarderBloc: fichier ou bloc  NULL\n");													///////////////
   	return -1;
   }
+  
   //pour ne pas écrire plus qu'un bloc en taille
   if (taille > TAILLE_BLOC) {
   	taille = TAILLE_BLOC;
@@ -146,7 +156,7 @@ int ChargerBloc(tBloc bloc, long taille, FILE *fichier){
 		taille = TAILLE_BLOC;
 	}
 	//on lit les données du fichier pour les mettre dans un bloc
-	size_t octetsLus = fread(bloc, taille, 1, fichier);
+	size_t octetsLus = fread(bloc, 1, taille, fichier);
 	if( octetsLus != (size_t)taille) {
 		
 		printf("erreur: ChargerBloc: problème lecture fichier\n");							////////////////

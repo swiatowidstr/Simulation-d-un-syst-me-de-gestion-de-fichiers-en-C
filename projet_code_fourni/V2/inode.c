@@ -184,29 +184,23 @@ void AfficherInode(tInode inode) {
 	
 	//affichage des données
 	printf("		Données : \n");
-	
-	for (int i = 0; i < NB_BLOCS_DIRECTS; i++) {
-	
-		if (inode->blocDonnees[i] != NULL) {
-		
-			unsigned char *contenu = malloc(TAILLE_BLOC);
-			if (contenu == NULL) {
-			
-				perror("AfficherInode : malloc");
-			}
-			else {
-			
-				long n = LireDonneesInode1bloc(inode, contenu, Taille(inode));
-				if (n >= 0) {
-				
-					fwrite(contenu, 1, n, stdout);
-					printf("\n");
-					printf("Nombre d'octets lus : %ld\n", n);
-				}
-				free(contenu);
-			}
-		}
+	//on alloue le bloc pour y mettre le contenu
+	unsigned char *contenu = malloc(TAILLE_BLOC);
+	if (contenu == NULL) {
+		  perror("AfficherInode : malloc");
+		  return;
 	}
+
+	if (inode->blocDonnees[0] != NULL) {
+			//on lit le contenu 
+		  long nbLus = LireDonneesInode1bloc(inode, contenu, Taille(inode));
+		  if (nbLus >= 0) {
+		      fwrite(contenu, 1, nbLus, stdout);
+		      printf("\n");
+		  }
+	}
+	//on libère le contenu pour éviter les leaks de mémoire
+	free(contenu);
 }
 
 /* V1
