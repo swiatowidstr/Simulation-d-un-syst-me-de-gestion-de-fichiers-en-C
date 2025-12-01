@@ -26,11 +26,6 @@ tBloc CreerBloc(void) {
   	fprintf(stderr, "CreerBloc : probleme creation\n");													////////////////////
   	return NULL;
   }
-  
-  for (int i = 0; i < TAILLE_BLOC; i++) {
-  	bloc[i] = 0;
-  }
-  
   printf("CreerBloc réussi\n");																									//----------------
   return bloc;
 }
