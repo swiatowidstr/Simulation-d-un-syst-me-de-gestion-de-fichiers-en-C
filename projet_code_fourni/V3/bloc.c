@@ -24,6 +24,11 @@ tBloc CreerBloc(void) {
   if (bloc == NULL) {
   	return NULL;
   }
+  
+   // on initialise a 0 pour éviter les caratères bizarres
+  for (int i = 0; i < TAILLE_BLOC; i++) {
+      bloc[i] = 0;
+  }
   return bloc;
 }
 
