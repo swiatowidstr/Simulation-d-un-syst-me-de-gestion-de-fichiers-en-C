@@ -267,7 +267,6 @@ long EcrireDonneesInode1bloc(tInode inode, unsigned char *contenu, long taille) 
  */
 long LireDonneesInode(tInode inode, unsigned char *contenu, long taille, long decalage) {
     if (inode == NULL || contenu == NULL) {
-        printf("erreur: LireDonneesInode: inode ou contenu NULL\n");
         return -1;
     }
 
@@ -331,72 +330,79 @@ long LireDonneesInode(tInode inode, unsigned char *contenu, long taille, long de
  
  
 long EcrireDonneesInode(tInode inode, unsigned char *contenu, long taille, long decalage) {
-  if (contenu == NULL || inode == NULL || taille <= 0) {
-  	return -1;
-  }
-  
-  if (taille <= 0) {
-  	return -1;
-  }
-  
-  long tailleMax = TAILLE_BLOC * NB_BLOCS_DIRECTS;
-  
-  //on regarde si le décalage est au dela de la taille de l'inode
-  if (decalage >= tailleMax) {
-  	return 0;
-  }
-  //on diminue la taille a écrire si elle dépasse la taille de l'inode 
-  if (decalage + taille > tailleMax) {
-  	taille = tailleMax - decalage;
-  }
-  
-  long nbOctetsEcrits = 0;
-  long octetsRestants = taille;
-  
-  //on calcule le premier bloc a partir du décalage
-	int numBloc = decalage / TAILLE_BLOC;
-  int decalageDansBloc = decalage % TAILLE_BLOC;
-  
-  while (octetsRestants > 0 && numBloc < NB_BLOCS_DIRECTS) {
-  	//on crée le bloc si il existe pas déjà
-  	if (inode->blocDonnees[numBloc] == NULL) {
-  		inode->blocDonnees[numBloc] = CreerBloc();
-  		if (inode->blocDonnees[numBloc] == NULL) {
-  			return -1;
-  		}
-  	}
-  
-		//on calcule le nombre doctets à écrire dans le bloc
-		long nbOctetsAEcrire = TAILLE_BLOC - decalageDansBloc;
-		if (nbOctetsAEcrire > octetsRestants) {
-			nbOctetsAEcrire = octetsRestants;
-		}
-		
-		//on écrit dans le bloc avec un décalage
-		unsigned char *positionDansBloc = inode->blocDonnees[numBloc];
-		
-		for (long i = 0; i < nbOctetsAEcrire; i++) {
-			positionDansBloc[decalageDansBloc + i] = contenu[nbOctetsEcrits + i];
-		}
-		
-		nbOctetsEcrits += nbOctetsAEcrire;
-		octetsRestants -= nbOctetsAEcrire;
-		
-		numBloc++;
-		//on remet le decalage à 0 car on a plus besoin de decaler après avoir fait au début
-		decalageDansBloc = 0;
-	}
-	
-	//on met a jout la taille du fichier a la fin;
-	if (decalage + nbOctetsEcrits > inode->taille) {
-		inode->taille = decalage + nbOctetsEcrits;
-	}
-	
-	//on met a jour les informations concernant les dates de modification et d'acces de l'inode
-	inode->dateDerAcces = time(NULL);
-	inode->dateDerModif = time(NULL);
-	inode->dateDerModifInode = time(NULL);
-	return nbOctetsEcrits;
+    if (contenu == NULL || inode == NULL || taille <= 0) {
+        return -1;
+    }
+    
+    long tailleMax = TAILLE_BLOC * NB_BLOCS_DIRECTS;
+    
+    // Si le décalage dépasse la taille maximale, erreur
+    if (decalage >= tailleMax) {
+        return 0;
+    }
+    
+    // Si décalage + taille dépasse la capacité, réduire la taille
+    if (decalage + taille > tailleMax) {
+        taille = tailleMax - decalage;
+    }
+    
+    // IMPORTANT : Créer tous les blocs nécessaires jusqu'au dernier bloc qu'on va utiliser
+    int premierBloc = 0;
+    int dernierBloc = (decalage + taille - 1) / TAILLE_BLOC;
+    
+    for (int i = premierBloc; i <= dernierBloc; i++) {
+        if (inode->blocDonnees[i] == NULL) {
+            inode->blocDonnees[i] = CreerBloc();
+            if (inode->blocDonnees[i] == NULL) {
+                return -1;
+            }
+        }
+    }
+    
+    long nbOctetsEcrits = 0;
+    long octetsRestants = taille;
+    unsigned char *ptrContenu = contenu;
+    
+    int numBloc = decalage / TAILLE_BLOC;
+    int decalageDansBloc = decalage % TAILLE_BLOC;
+    
+    while (octetsRestants > 0 && numBloc < NB_BLOCS_DIRECTS) {
+        // Le bloc existe déjà (créé ci-dessus)
+        
+        // Calculer le nombre d'octets à écrire dans ce bloc
+        long octetsAEcrireDansCeBloc = TAILLE_BLOC - decalageDansBloc;
+        if (octetsAEcrireDansCeBloc > octetsRestants) {
+            octetsAEcrireDansCeBloc = octetsRestants;
+        }
+        
+        // Écrire dans le bloc à partir du décalage interne
+        for (long i = 0; i < octetsAEcrireDansCeBloc; i++) {
+            inode->blocDonnees[numBloc][decalageDansBloc + i] = ptrContenu[i];
+        }
+        
+        // Avancer le pointeur de contenu
+        ptrContenu += octetsAEcrireDansCeBloc;
+        nbOctetsEcrits += octetsAEcrireDansCeBloc;
+        octetsRestants -= octetsAEcrireDansCeBloc;
+        
+        // Passer au bloc suivant
+        numBloc++;
+        decalageDansBloc = 0;
+    }
+    
+    // Mettre à jour la taille totale
+    long nouvelleTaille = decalage + nbOctetsEcrits;
+    if (nouvelleTaille > inode->taille) {
+        inode->taille = nouvelleTaille;
+    }
+    
+    // Mettre à jour les dates
+    time_t now = time(NULL);
+    inode->dateDerAcces = now;
+    inode->dateDerModif = now;
+    inode->dateDerModifInode = now;
+    
+    return nbOctetsEcrits;
 }
 
 /* V3

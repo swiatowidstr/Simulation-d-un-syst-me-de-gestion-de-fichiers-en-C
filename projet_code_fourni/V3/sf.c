@@ -299,7 +299,7 @@ int SauvegarderSF(tSF sf, char nomFichier[]) {
   }
   
   //on sauvegarde les informations du superBloc
-  nbLus = fwrite(sf->superBloc->nomDisque, sizeof(struct sSuperBloc), 1, f);
+  nbLus = fwrite(sf->superBloc, sizeof(struct sSuperBloc), 1, f);
   if (nbLus != 1) {
 		fclose(f);
 		return -1;
@@ -388,6 +388,7 @@ int ChargerSF(tSF *pSF, char nomFichier[]) {
   		free(element);
   		DetruireSF(&sf);
   		fclose(f);
+  		return -1; // Ajout du return
   	}
   	
   	//on charge les données de l'inode depuis le fichier
@@ -396,6 +397,7 @@ int ChargerSF(tSF *pSF, char nomFichier[]) {
   		free(element);
   		DetruireSF(&sf);
   		fclose(f);
+  		return -1; // Ajout du return
   	}
   	
   	element->suivant = NULL;
@@ -413,9 +415,6 @@ int ChargerSF(tSF *pSF, char nomFichier[]) {
   *pSF = sf;
   return 0;
 }
-
-
-
 
 
 
