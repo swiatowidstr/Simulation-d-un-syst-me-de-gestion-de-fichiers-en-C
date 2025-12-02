@@ -13,8 +13,7 @@ static void creerFichierTest(const char* nom, const char* contenu) {
 }
 
 int main() {
-		//TODO AJOUTER DES TESTS
-    printf("TESTS V3:\n\n\n");
+    printf("TESTS V3\n");
 		
     // créer les fichiers de test
     creerFichierTest("fichier1.txt", "Bonjour SF V3 nananananannananananannana je parle bcp\n");
@@ -34,7 +33,6 @@ int main() {
 
     DetruireSF(&sf);
     /*
-    //TODO FINIR DE CORRIGER LE DECALAGE
     printf("\n\n\n");
     printf("test décalage\n");
     char *texte = "Bonjour je m'appelle swiatowisd et je suis en L2 informatique et le projet commence a devenir vrm long";
@@ -48,9 +46,9 @@ int main() {
     
     DetruireInode(&inode1);
     */
-    printf("\n");
+    printf("\n\n\n");
     
-    printf("TEST AVEC LE FICHIER SF CHARGÉ PRÉCÉDEMENT:\n\n\n");
+    printf("test avec le sf chargé depuis le fichier enregistré précédement\n");
     
 		tSF sf2 = NULL;
 		ChargerSF(&sf2, "sauvegarde_SF_test_V3.bin");

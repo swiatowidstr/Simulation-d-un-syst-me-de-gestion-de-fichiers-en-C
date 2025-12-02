@@ -61,6 +61,8 @@ static tSuperBloc CreerSuperBloc(char nomDisque[]) {
 	//on alloue la place nécéssaire pour le supeBloc
 	tSuperBloc superBloc = malloc(sizeof(struct sSuperBloc));
 	if (superBloc == NULL) {
+			
+		fprintf(stderr, "CreerSuperBloc : probleme creation\n");							///////////////
 		return NULL;
 	}
 	
@@ -72,6 +74,8 @@ static tSuperBloc CreerSuperBloc(char nomDisque[]) {
 	
 	superBloc->nomDisque[i] = '\0';
 	superBloc->dateDerModif = time(NULL);
+	
+	printf("CreerSuperBloc: réussi\n");																			//---------------
 	return superBloc;
 }
 
@@ -85,6 +89,8 @@ static void DetruireSuperBloc(tSuperBloc *pSuperBloc) {
   	free(*pSuperBloc);
   	*pSuperBloc = NULL;
   }
+  
+  printf("DetruireSuperBloc: réussi\n");															//---------------
 }
 
 /* V2
@@ -95,10 +101,14 @@ static void DetruireSuperBloc(tSuperBloc *pSuperBloc) {
 static void AfficherSuperBloc(tSuperBloc superBloc) {
 	if (superBloc == NULL) {
 		printf("vide\n");
+		
+		printf("erreur: AfficherSuperBloc: superBloc vide\n");						////////////////////
 		return;
 	}
 	time_t dateDerModif = superBloc->dateDerModif;
 	printf("taille bloc = %d, date der modif = %s", TAILLE_BLOC, ctime(&dateDerModif));
+	
+	printf("AfficherSuperBloc: réussi\n");
 }
 
 /* V2
@@ -109,18 +119,24 @@ static void AfficherSuperBloc(tSuperBloc superBloc) {
 tSF CreerSF (char nomDisque[]){
   tSF sf = malloc (sizeof(struct sSF));
   if (sf == NULL) {
+  
+  	fprintf(stderr, "CreerSF : probleme creation\n");									/////////////
   	return NULL;
   }
   
   sf->superBloc = CreerSuperBloc(nomDisque);
   if (sf->superBloc == NULL) {
   	free(sf);
+  	
+  	printf("erreur: CreerSF: CreerSuperBloc échoué\n");									/////////////// 
   	return NULL;
   }
   sf->listeInodes.premier = NULL;
   sf->listeInodes.dernier = NULL;
   sf->listeInodes.nbInodes = 0;
   
+  
+  printf("CreerSF: réussi\n");																					//------------------
   return sf;
 }
 
@@ -165,6 +181,8 @@ void DetruireSF(tSF *pSF) {
  */
 void AfficherSF (tSF sf){
 	if (sf == NULL) {
+		
+		printf("vide\n");																						//////////////////
 		return;
 	}
   printf("SF de nom %s, super bloc:\n", sf->superBloc->nomDisque);
@@ -175,8 +193,9 @@ void AfficherSF (tSF sf){
   while (courant != NULL) {
   	AfficherInode(courant->inode);
   	courant = courant->suivant;
-  	printf("\n");
   }
+  
+  printf("AfficherSF: réussi\n");																	//--------------------
 }
 
 /* V2
@@ -186,6 +205,8 @@ void AfficherSF (tSF sf){
  */
 long Ecrire1BlocFichierSF(tSF sf, char nomFichier[], natureFichier type) {
   if (sf == NULL || nomFichier == NULL) {
+  
+  	printf("erreur: Ecrire1BlocFichierSF: sf ou nomFichier NULL\n");		//////////////
   	return -1;
   }
   tInode inode = CreerInode(sf->listeInodes.nbInodes, type);
@@ -209,6 +230,8 @@ long Ecrire1BlocFichierSF(tSF sf, char nomFichier[], natureFichier type) {
   
   FILE *f = fopen(nomFichier, "rb");
   if (f == NULL) {
+  
+  	printf("erreur: Ecrire1blocFIchierSF: problème ouverturefichier, fichier NULL\n");	////////
   	return -1;
   }
   
@@ -217,6 +240,8 @@ long Ecrire1BlocFichierSF(tSF sf, char nomFichier[], natureFichier type) {
   fclose(f);
   
   long nbOctetsEcrits = EcrireDonneesInode1bloc(inode, buffer, nbOctetsLus);
+  
+  printf("Ecrire1BlocFichierSF: réussi\n");																					//-------------
   return nbOctetsEcrits;
 }
 
@@ -229,6 +254,8 @@ long Ecrire1BlocFichierSF(tSF sf, char nomFichier[], natureFichier type) {
  */
 long EcrireFichierSF(tSF sf, char nomFichier[], natureFichier type) {
 	if (sf == NULL || nomFichier == NULL) {
+	
+		printf("erreur: EcrireFIchierSF: sf ou nomFichier NULL\n");									/////////////
 		return -1;
 	}
 	
@@ -237,6 +264,8 @@ long EcrireFichierSF(tSF sf, char nomFichier[], natureFichier type) {
 	//on ajoute l'inode crée dans la liste chainée d'inodes
 	struct sListeInodesElement *nouvelElement = malloc(sizeof(struct sListeInodesElement));
 	if (nouvelElement == NULL) {
+	
+		printf("erreur: EcrireFichierSF: nouvel element de inode non crée NULL\n"); 			///////////
 		return -1;
 	}
 	nouvelElement->inode = inode;
@@ -256,6 +285,8 @@ long EcrireFichierSF(tSF sf, char nomFichier[], natureFichier type) {
 	//on ouvre le fichier de nomFichier
 	FILE *f = fopen(nomFichier, "rb");
 	if (f == NULL) {
+	
+		printf("erreur: EcrireFichierSF: problème ouverture fichier, fichier NULL\n");		//////
 		return -1;
 	}
 	
@@ -271,6 +302,8 @@ long EcrireFichierSF(tSF sf, char nomFichier[], natureFichier type) {
 		nbOctetsEcrits += nbOctetsLus;
 	}
 	fclose(f);
+	
+	printf("EcrireFichierSF: réussi\n");																					//-------------
 	return nbOctetsEcrits;
 }
 

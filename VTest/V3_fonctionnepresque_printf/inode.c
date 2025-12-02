@@ -39,6 +39,8 @@ tInode CreerInode(int numInode, natureFichier type) {
   tInode inode = malloc(sizeof(struct sInode));
   
   if (inode == NULL) {
+  
+  	fprintf(stderr, "CreerInode : probleme creation\n");								//////////////
   	return NULL;
   }
   
@@ -54,6 +56,8 @@ tInode CreerInode(int numInode, natureFichier type) {
 	inode->dateDerAcces = tempsActuel;
 	inode->dateDerModif = tempsActuel;
 	inode-> dateDerModifInode = tempsActuel;
+  
+  printf("CreerInode: réussi\n");																				//------------------
   return inode;
 }
 
@@ -64,6 +68,8 @@ tInode CreerInode(int numInode, natureFichier type) {
  */
 void DetruireInode(tInode *pInode) {
   if (pInode == NULL || *pInode == NULL) {
+  
+  	printf("erreur: DetruireInode: pInode ou *pInode NULL\n");						/////////////////////
   	return;
   }
   
@@ -77,6 +83,8 @@ void DetruireInode(tInode *pInode) {
 	//on détruit l'inode elle meme
   free(*pInode);
  	*pInode = NULL;
+ 	
+ 	printf("DetruireInode: réussi\n");																	//----------------
 }
 
 /* V1
@@ -141,6 +149,8 @@ natureFichier Type(tInode inode) {
 void AfficherInode(tInode inode) {
 	if (inode == NULL) {
 		printf("vide\n");
+		
+		printf("erreur: AfficherInode: inode vide\n");				///////////////////
 		return;
 	}
 	
@@ -188,12 +198,15 @@ void AfficherInode(tInode inode) {
 	
 	long lus = LireDonneesInode(inode, contenu, taille, 0);
 	if (lus < 0) {
+		perror("erreur: AfficherInode: impossible de lire l'inode\n");					///////////////////////
 		free(contenu);
 		return;
 	}
 	//on met un caractère qui indique la fin de la chaine pour pouvoir lire la chaine  
 	contenu[lus] = '\0';
 	printf("%s", contenu);
+	
+	printf("\nAfficherInode: réussi\n");																	//-------------
 	free(contenu);														
 	printf("\n");
 }
@@ -206,6 +219,8 @@ void AfficherInode(tInode inode) {
  */
 long LireDonneesInode1bloc(tInode inode, unsigned char *contenu, long taille) {
 	if (contenu == NULL || inode == NULL || inode->blocDonnees[0] == NULL) {
+	
+		printf("erreur: LireDonneesInode1bloc: contenu ou inode ou blocDonnees NULL\n");	///////
 		return -1;
 	}
 	long nbOctetsLus = LireContenuBloc(inode->blocDonnees[0], contenu, taille);
@@ -213,6 +228,7 @@ long LireDonneesInode1bloc(tInode inode, unsigned char *contenu, long taille) {
   //On met a jour la date
   inode->dateDerAcces = time(NULL);
   
+  printf("LireDonneesInode1bloc: réussi\n");														//-------------
   return nbOctetsLus;
 }
 
@@ -224,12 +240,15 @@ long LireDonneesInode1bloc(tInode inode, unsigned char *contenu, long taille) {
  */
 long EcrireDonneesInode1bloc(tInode inode, unsigned char *contenu, long taille) {
 	if (contenu == NULL || inode == NULL) {
+	
+		printf("erreur: EcrireDonneesInode1bloc: contenu ou inode NULL\n");		//////////
 		return -1;
 	}
 	
 	if (inode->blocDonnees[0] == NULL) {
 		inode->blocDonnees[0] = CreerBloc();
 		if (inode->blocDonnees[0] == NULL) {
+			printf("erreur: EcrireDonneesInode1bloc: blocDonnees == NULL\n");			/////////
 			return -1;
 		}
 	}
@@ -255,6 +274,8 @@ long EcrireDonneesInode1bloc(tInode inode, unsigned char *contenu, long taille) 
   inode->dateDerAcces = time(NULL);
   inode->dateDerModif = time(NULL);
   inode->dateDerModifInode = time(NULL);
+  
+  printf("EcrireDonneesInode1bloc: réussi\n");										//-------------
   return nbOctetsEcrits;
 }
 
@@ -332,6 +353,7 @@ long LireDonneesInode(tInode inode, unsigned char *contenu, long taille, long de
  
 long EcrireDonneesInode(tInode inode, unsigned char *contenu, long taille, long decalage) {
   if (contenu == NULL || inode == NULL || taille <= 0) {
+  	printf("erreur: EcrireDonneesInode(contenu ou inode NULL ou taille <= 0\n");			///////
   	return -1;
   }
   
@@ -362,6 +384,7 @@ long EcrireDonneesInode(tInode inode, unsigned char *contenu, long taille, long 
   	if (inode->blocDonnees[numBloc] == NULL) {
   		inode->blocDonnees[numBloc] = CreerBloc();
   		if (inode->blocDonnees[numBloc] == NULL) {
+  			printf("erreur: EcrireDonneesInode: impossible de créer le bloc\n");								/////////
   			return -1;
   		}
   	}
@@ -396,6 +419,8 @@ long EcrireDonneesInode(tInode inode, unsigned char *contenu, long taille, long 
 	inode->dateDerAcces = time(NULL);
 	inode->dateDerModif = time(NULL);
 	inode->dateDerModifInode = time(NULL);
+	
+	printf("EcrireDonneesInode: réussi\n");																			//----------
 	return nbOctetsEcrits;
 }
 
@@ -407,6 +432,8 @@ long EcrireDonneesInode(tInode inode, unsigned char *contenu, long taille, long 
  */
 int SauvegarderInode(tInode inode, FILE *fichier) {
   if (fichier == NULL || inode == NULL) {
+  	
+  	printf("erreur: SauvegarderInode: fichier ou inode NULL\n");									/////////
   	return -1;
   }
 
@@ -436,6 +463,8 @@ int SauvegarderInode(tInode inode, FILE *fichier) {
   		
   		//si SauvegarderBloc renvoie 0 c'est que tout s'est bien passé
   		if (SauvegarderBloc(inode->blocDonnees[i], tailleBloc, fichier) != 0) {
+  		
+  			printf("erreur: SauvegarderInode: sauvegarderBloc\n");							/////////
   			return -1;
   		}
   		octetsRestants -= tailleBloc;
@@ -449,6 +478,8 @@ int SauvegarderInode(tInode inode, FILE *fichier) {
   if (nbEcrits != 1) return -1;
   nbEcrits = fwrite(&(inode->dateDerModifInode), sizeof(inode->dateDerModifInode), 1, fichier);
   if (nbEcrits != 1) return -1;
+  
+  printf("SauvegarderInode: réussi\n");																				//------------
   return 0;
 }
 
@@ -460,6 +491,8 @@ int SauvegarderInode(tInode inode, FILE *fichier) {
  */
 int ChargerInode(tInode *pInode, FILE *fichier) {
   if (fichier == NULL || pInode == NULL) {
+  
+  	printf("erreur: ChargerInode: fichier ou pInode NULL\n");										////////
   	return -1;
   }
   
@@ -482,6 +515,8 @@ int ChargerInode(tInode *pInode, FILE *fichier) {
   	if ((*pInode)->blocDonnees[i] == NULL) {
   		(*pInode)->blocDonnees[i] = CreerBloc();
   		if((*pInode)->blocDonnees[i] == NULL) {
+  		
+  			printf("erreur: ChargerInode\n");																				/////////
   			return -1;
   		}
   		
@@ -495,6 +530,8 @@ int ChargerInode(tInode *pInode, FILE *fichier) {
   		
   		//si ChargerBloc renvoie 0 c'est que tout s'est bien passé
   		if (ChargerBloc((*pInode)->blocDonnees[i], tailleBloc, fichier) != 0) {
+  		
+  			printf("erreur: ChargerInode: chargerBloc\n");																			////////////
   			return -1;
   		}
   		
@@ -509,6 +546,8 @@ int ChargerInode(tInode *pInode, FILE *fichier) {
   if (nbLus != 1) return -1;
   nbLus = fread(&((*pInode)->dateDerModifInode), sizeof((*pInode)->dateDerModifInode), 1, fichier);
   if (nbLus != 1) return -1;
+  
+  printf("ChargerInode: réussi\n");																										//------------
   return 0;
 }
 
