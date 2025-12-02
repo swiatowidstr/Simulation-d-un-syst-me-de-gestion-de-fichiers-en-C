@@ -31,11 +31,13 @@ int main() {
     // affichage et sauvegarde
     AfficherSF(sf);
     SauvegarderSF(sf, "sauvegarde_SF_test_V3.bin");
+		
 
     DetruireSF(&sf);
-    /*
-    //TODO FINIR DE CORRIGER LE DECALAGE
     printf("\n\n\n");
+    
+    
+    //test decalage
     printf("test décalage\n");
     char *texte = "Bonjour je m'appelle swiatowisd et je suis en L2 informatique et le projet commence a devenir vrm long";
     tInode inode1 = CreerInode(1, ORDINAIRE);
@@ -47,9 +49,10 @@ int main() {
     AfficherInode(inode1); 
     
     DetruireInode(&inode1);
-    */
+    
     printf("\n");
     
+    //test chargerSF
     printf("TEST AVEC LE FICHIER SF CHARGÉ PRÉCÉDEMENT:\n\n\n");
     
 		tSF sf2 = NULL;

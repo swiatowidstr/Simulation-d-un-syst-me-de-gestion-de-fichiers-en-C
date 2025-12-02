@@ -19,7 +19,7 @@
  * Retour : le bloc créé ou NULL en cas de problème
  */
 tBloc CreerBloc(void) {
-  tBloc bloc = malloc(TAILLE_BLOC * sizeof(unsigned char));
+  tBloc bloc = calloc(TAILLE_BLOC, sizeof(unsigned char));
   
   if (bloc == NULL) {
   	return NULL;
