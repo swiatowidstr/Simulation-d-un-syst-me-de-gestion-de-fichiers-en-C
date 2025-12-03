@@ -1,0 +1,63 @@
+J'ai fait le projet jusqu'a la V3 et étant donné que je dois rendre tous les makeFiles des 3 niveau alors qu'on a du changer la fonction AfficherInode dans la version 3 je vous envoie donc le code de la fonction AfficherInode de la V1/V2 si besoin pour les tests car je suis pas sur que la nouvelle fonction AfficherInode fonctionne pour tous les niveau.
+
+
+
+void AfficherInode(tInode inode) {
+	if (inode == NULL) {
+		printf("vide\n");
+		return;
+	}
+	
+	//titre
+	printf("------Inode------[%u]\n", Numero(inode));
+	
+	//afficahge du type
+	char *typeStr;
+	if (Type(inode) == ORDINAIRE) {
+		typeStr = "ordinaire";
+	}
+	else if (Type(inode) == REPERTOIRE) {
+		typeStr = "repertoire";
+	}
+	else if (Type(inode) == AUTRE) {
+		typeStr = "autre";
+	}
+	printf("type : %s\n", typeStr);
+		
+	//affichage de la taille
+	long taille = Taille(inode);
+	if (taille > 64) {
+		taille = TAILLE_BLOC;
+	}
+	printf("		taille : %ld octets\n", taille);
+	
+	//affichage des dates
+	time_t t1 = DateDerAcces(inode);
+	time_t t2 = DateDerModif(inode);
+	time_t t3 = DateDerModifFichier(inode);
+
+	printf("                date dernier accès : %s", ctime(&t1));
+	printf("                date dernière modification : %s", ctime(&t2));
+	printf("                date dernière modification inode : %s", ctime(&t3));
+
+	
+	//affichage des données
+	printf("		Données : \n");
+	//on alloue le bloc pour y mettre le contenu
+	unsigned char *contenu = malloc(TAILLE_BLOC);
+	if (contenu == NULL) {
+		  perror("AfficherInode : malloc");
+		  return;
+	}
+
+	if (inode->blocDonnees[0] != NULL) {
+			//on lit le contenu 
+		  long nbLus = LireDonneesInode1bloc(inode, contenu, Taille(inode));
+		  if (nbLus >= 0) {
+		      fwrite(contenu, 1, nbLus, stdout);
+		      printf("\n");
+		  }
+	}
+	//on libère le contenu pour éviter les leaks de mémoire
+	free(contenu);
+}
