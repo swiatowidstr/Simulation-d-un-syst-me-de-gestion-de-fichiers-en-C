@@ -19,15 +19,11 @@
  * Retour : le bloc créé ou NULL en cas de problème
  */
 tBloc CreerBloc(void) {
-  tBloc bloc = malloc(TAILLE_BLOC * sizeof(unsigned char));
-  
+	//calloc pour initialise tous les octets du bloc a 0
+  tBloc bloc = calloc(TAILLE_BLOC, sizeof(unsigned char));
   if (bloc == NULL) {
+  	perror("CreerBloc: erreur allocation bloc");
   	return NULL;
-  }
-  
-   // on initialise a 0 pour éviter les caratères bizarres
-  for (int i = 0; i < TAILLE_BLOC; i++) {
-      bloc[i] = 0;
   }
   return bloc;
 }
@@ -38,8 +34,8 @@ tBloc CreerBloc(void) {
  * Retour : aucun
  */
 void DetruireBloc(tBloc *pBloc){
-
   if (pBloc == NULL || *pBloc == NULL) {
+  	perror("DetruireBloc: bloc non existant");
   	return;
   }
   
@@ -55,6 +51,7 @@ void DetruireBloc(tBloc *pBloc){
  */
 long EcrireContenuBloc(tBloc bloc, unsigned char *contenu, long taille) {
     if (bloc == NULL || contenu == NULL || taille <= 0) {
+    		perror("EcrireContenuBloc: taille <= 0 || contenu ou bloc inexistant");
         return 0;
     }
     
@@ -77,6 +74,7 @@ long LireContenuBloc(tBloc bloc, unsigned char *contenu, long taille){
 
 	//on peut faire pareil que dans la fonction EcrireContenuBloc en changeant bloc en contenu
   if (bloc == NULL || contenu == NULL || taille <= 0) {
+  	perror("LireContenuBloc: taille <= 0 || contenu ou bloc inexistant");
   	return 0;
   }
   
@@ -96,6 +94,7 @@ long LireContenuBloc(tBloc bloc, unsigned char *contenu, long taille){
  */
 int SauvegarderBloc(tBloc bloc, long taille, FILE *fichier){
   if (fichier == NULL || bloc == NULL) {
+  	perror("SauvegarderBloc: fichier ou bloc inexistant");
   	return -1;
   }
   
@@ -107,6 +106,7 @@ int SauvegarderBloc(tBloc bloc, long taille, FILE *fichier){
   //on écrit les données du bloc
   size_t octetsEcrits = fwrite(bloc, 1, taille, fichier);
   if (octetsEcrits != (size_t)taille) {
+  	perror("SauvegarderBloc: problème écriture du fichier");
   	return -1;
   }
   return 0;
@@ -119,6 +119,7 @@ int SauvegarderBloc(tBloc bloc, long taille, FILE *fichier){
  */
 int ChargerBloc(tBloc bloc, long taille, FILE *fichier){
 	if(fichier == NULL) {
+		perror("ChargerBloc: fichier inexistant");
 		return -1	;
 	}
 	
@@ -129,6 +130,7 @@ int ChargerBloc(tBloc bloc, long taille, FILE *fichier){
 	//on lit les données du fichier pour les mettre dans un bloc
 	size_t octetsLus = fread(bloc, 1, taille, fichier);
 	if( octetsLus != (size_t)taille) {
+		perror("ChargerBloc: problème lecture du fichier");
 		return -1;
 	}
 	return 0;

@@ -146,12 +146,6 @@ void DetruireSF(tSF *pSF) {
 			free(courant);
 			courant = suivant;
 		}
-		
-		if ((*pSF)->superBloc != NULL) {
-			free((*pSF)->superBloc);
-			(*pSF)->superBloc = NULL;
-		}
-		
 		free(*pSF);
 		*pSF = NULL;
 	}
